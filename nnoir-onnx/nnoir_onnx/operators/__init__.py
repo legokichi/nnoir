@@ -20,8 +20,10 @@ from .flatten import OpFlatten
 from .gather import OpGather
 from .gemm import OpGemm
 from .global_average_pool import OpGlobalAveragePool
+from .global_max_pool import OpGlobalMaxPool
 from .hard_sigmoid import OpHardSigmoid
 from .hard_swish import OpHardSwish
+from .layer_normalization import OpLayerNormalization
 from .leaky_relu import OpLeakyRelu
 from .lrn import OpLRN
 from .lstm import OpLSTM

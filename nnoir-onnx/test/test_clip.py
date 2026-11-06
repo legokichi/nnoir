@@ -49,3 +49,64 @@ def test_clip_01() -> None:
     inputs = {"x": (np.random.rand(1, 3, 4, 5).astype(np.float32) * 10.0)}
     outputs = ["y"]
     ClipTester(inputs, outputs).run()
+
+
+def test_clip_02() -> None:
+    class ClipTester(Base):
+        """
+        opset version >= 11, negative min
+        """
+
+        def create_onnx(self) -> onnx.ModelProto:
+            node = make_node("Clip", inputs=["x", "min", "max"], outputs=["y"])
+            max_init = make_tensor("max", TensorProto.FLOAT, (), np.array([6.0], dtype=np.float32))
+            min_init = make_tensor("min", TensorProto.FLOAT, (), np.array([-1.0], dtype=np.float32))
+
+            inputs = [info("x", TensorProto.FLOAT, (1, 3, 4, 5))]
+            outputs = [info("y", TensorProto.FLOAT, (1, 3, 4, 5))]
+            graph = make_graph([node], "add_graph", inputs, outputs, initializer=[min_init, max_init])
+            return make_model(graph, opset_imports=[make_opsetid("", 13)])
+
+    inputs = {"x": (np.random.randn(1, 3, 4, 5).astype(np.float32) * 5.0)}
+    outputs = ["y"]
+    ClipTester(inputs, outputs).run()
+
+
+def test_clip_03() -> None:
+    class ClipTester(Base):
+        """
+        opset version >= 11, only max (min input omitted)
+        """
+
+        def create_onnx(self) -> onnx.ModelProto:
+            node = make_node("Clip", inputs=["x", "", "max"], outputs=["y"])
+            max_init = make_tensor("max", TensorProto.FLOAT, (), np.array([0.5], dtype=np.float32))
+
+            inputs = [info("x", TensorProto.FLOAT, (1, 3, 4, 5))]
+            outputs = [info("y", TensorProto.FLOAT, (1, 3, 4, 5))]
+            graph = make_graph([node], "add_graph", inputs, outputs, initializer=[max_init])
+            return make_model(graph, opset_imports=[make_opsetid("", 13)])
+
+    inputs = {"x": (np.random.randn(1, 3, 4, 5).astype(np.float32) * 5.0)}
+    outputs = ["y"]
+    ClipTester(inputs, outputs).run()
+
+
+def test_clip_04() -> None:
+    class ClipTester(Base):
+        """
+        opset version >= 11, only min (max input omitted)
+        """
+
+        def create_onnx(self) -> onnx.ModelProto:
+            node = make_node("Clip", inputs=["x", "min"], outputs=["y"])
+            min_init = make_tensor("min", TensorProto.FLOAT, (), np.array([-0.5], dtype=np.float32))
+
+            inputs = [info("x", TensorProto.FLOAT, (1, 3, 4, 5))]
+            outputs = [info("y", TensorProto.FLOAT, (1, 3, 4, 5))]
+            graph = make_graph([node], "add_graph", inputs, outputs, initializer=[min_init])
+            return make_model(graph, opset_imports=[make_opsetid("", 13)])
+
+    inputs = {"x": (np.random.randn(1, 3, 4, 5).astype(np.float32) * 5.0)}
+    outputs = ["y"]
+    ClipTester(inputs, outputs).run()

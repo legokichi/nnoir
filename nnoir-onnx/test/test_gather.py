@@ -50,3 +50,63 @@ def test_gather_01() -> None:
     v0 = np.random.rand(1, 3, 5, 5).astype(np.float32)
     outputs = ["v1"]
     GatherTester({"v0": v0}, outputs).run()
+
+
+def test_gather_02() -> None:
+    class GatherTester(Base):
+        def __init__(self, inputs: Dict[str, NDArray[Any]], outputs: List[str]):
+            super().__init__(inputs, outputs)
+
+        def create_onnx(self) -> onnx.ModelProto:
+            node = make_node("Gather", inputs=["v0", "indices"], outputs=["v1"], axis=1)
+            inputs = [info("v0", TensorProto.FLOAT, (1, 4, 3, 3))]
+            outputs = [info("v1", TensorProto.FLOAT, (1, 3, 3, 3))]
+
+            init_indices = from_array(np.array([0, 2, -1]).astype(np.int64), "indices")
+
+            graph = make_graph([node], "gather_graph", inputs, outputs, initializer=[init_indices])
+            return make_model(graph)
+
+    v0 = np.random.rand(1, 4, 3, 3).astype(np.float32)
+    outputs = ["v1"]
+    GatherTester({"v0": v0}, outputs).run()
+
+
+def test_gather_03() -> None:
+    class GatherTester(Base):
+        def __init__(self, inputs: Dict[str, NDArray[Any]], outputs: List[str]):
+            super().__init__(inputs, outputs)
+
+        def create_onnx(self) -> onnx.ModelProto:
+            node = make_node("Gather", inputs=["v0", "indices"], outputs=["v1"], axis=0)
+            inputs = [info("v0", TensorProto.FLOAT, (4, 3))]
+            outputs = [info("v1", TensorProto.FLOAT, (2, 2, 3))]
+
+            init_indices = from_array(np.array([[3, 0], [1, 1]]).astype(np.int64), "indices")
+
+            graph = make_graph([node], "gather_graph", inputs, outputs, initializer=[init_indices])
+            return make_model(graph)
+
+    v0 = np.random.rand(4, 3).astype(np.float32)
+    outputs = ["v1"]
+    GatherTester({"v0": v0}, outputs).run()
+
+
+def test_gather_04() -> None:
+    class GatherTester(Base):
+        def __init__(self, inputs: Dict[str, NDArray[Any]], outputs: List[str]):
+            super().__init__(inputs, outputs)
+
+        def create_onnx(self) -> onnx.ModelProto:
+            node = make_node("Gather", inputs=["v0", "indices"], outputs=["v1"], axis=2)
+            inputs = [info("v0", TensorProto.FLOAT, (1, 3, 5, 5))]
+            outputs = [info("v1", TensorProto.FLOAT, (1, 3, 2, 5))]
+
+            init_indices = from_array(np.array([4, 0]).astype(np.int32), "indices")
+
+            graph = make_graph([node], "gather_graph", inputs, outputs, initializer=[init_indices])
+            return make_model(graph)
+
+    v0 = np.random.rand(1, 3, 5, 5).astype(np.float32)
+    outputs = ["v1"]
+    GatherTester({"v0": v0}, outputs).run()
