@@ -49,6 +49,16 @@ class OpSplit(Op):
             if attr.name == "axis":
                 split_axis = attr.i
 
+        # ONNX permits a negative axis. The permutation arithmetic below
+        # (pop/insert on a list of axis indices) assumes a non-negative
+        # axis: with axis=-1, pop(-1) + append happens to restore the
+        # identity for transpose_perm_0, but list.insert(-1, ...) inserts
+        # before the last element, so transpose_perm_1 comes out wrong
+        # (e.g. [0, 2, 1] instead of [0, 1, 2] for a 3-D input) and every
+        # split output is silently transposed. Normalize the axis first.
+        if split_axis < 0:
+            split_axis += len(env[self.node.input[0]].shape)
+
         output_sizes_on_axis = []
         for output in self.node.output:
             output_sizes_on_axis.append(env[output].shape[split_axis])
